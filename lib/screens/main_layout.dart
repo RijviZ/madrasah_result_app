@@ -12,9 +12,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_translations.dart';
+import '../providers/auth_provider.dart';
 import '../providers/locale_provider.dart';
 import '../providers/repository_providers.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/login_dialog.dart';
 import '../widgets/screen_header.dart';
 import 'dashboard_screen.dart';
 import 'marks_entry_screen.dart';
@@ -106,17 +108,16 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   int _selectedIndex = _kDashboard;
   bool _railExtended = true;
 
-  List<Widget> _buildScreens() {
-    return [
-      DashboardScreen(
-        onNavigateTab: (index) => setState(() => _selectedIndex = index),
-      ),
-      const StudentManagementScreen(),
-      const SubjectManagementScreen(),
-      const MarksEntryScreen(),
-      const ResultsScreen(),
-      const SettingsScreen(),
-    ];
+  void _onTabSelected(int index) async {
+    // Protected admin routes: Students (1), Subjects (2), Marks Entry (3)
+    if (index == _kStudents || index == _kSubjects || index == _kMarksEntry) {
+      final isAuthenticated = ref.read(authProvider).isAuthenticated;
+      if (!isAuthenticated) {
+        final loggedIn = await LoginDialog.show(context);
+        if (!loggedIn) return;
+      }
+    }
+    setState(() => _selectedIndex = index);
   }
 
   @override
@@ -126,7 +127,14 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final syncStatus = ref.watch(syncStatusProvider);
     final width = MediaQuery.of(context).size.width;
     final isDesktop = width > 800;
-    final screens = _buildScreens();
+    final screens = [
+      DashboardScreen(onNavigateTab: _onTabSelected),
+      const StudentManagementScreen(),
+      const SubjectManagementScreen(),
+      const MarksEntryScreen(),
+      const ResultsScreen(),
+      const SettingsScreen(),
+    ];
 
     return Scaffold(
       appBar: _AppHeader(
@@ -147,8 +155,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
               extended: _railExtended,
               lang: lang,
               screens: screens,
-              onDestinationSelected: (i) =>
-                  setState(() => _selectedIndex = i),
+              onDestinationSelected: _onTabSelected,
             )
           : _AnimatedScreenSwitcher(
               selectedIndex: _selectedIndex,
@@ -159,7 +166,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           : _MobileNav(
               selectedIndex: _selectedIndex,
               lang: lang,
-              onTap: (i) => setState(() => _selectedIndex = i),
+              onTap: _onTabSelected,
             ),
     );
   }
@@ -317,6 +324,40 @@ class _AppHeader extends ConsumerWidget implements PreferredSizeWidget {
               size: 11,
             ),
           ),
+        ),
+
+        // ── Auth Action Button ──────────────────────────────────────────────
+        Consumer(
+          builder: (context, ref, _) {
+            final authState = ref.watch(authProvider);
+            return IconButton(
+              icon: Icon(
+                authState.isAuthenticated
+                    ? Icons.lock_open_rounded
+                    : Icons.lock_outline_rounded,
+                color: authState.isAuthenticated
+                    ? const Color(0xFF059669)
+                    : cs.onPrimaryContainer,
+              ),
+              onPressed: () {
+                if (authState.isAuthenticated) {
+                  ref.read(authProvider.notifier).signOut();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(lang == 'bn'
+                          ? 'লগআউট সফল হয়েছে'
+                          : 'Signed out successfully'),
+                    ),
+                  );
+                } else {
+                  LoginDialog.show(context);
+                }
+              },
+              tooltip: authState.isAuthenticated
+                  ? (lang == 'bn' ? 'লগআউট করুন' : 'Sign Out')
+                  : (lang == 'bn' ? 'শিক্ষক লগইন' : 'Teacher Login'),
+            );
+          },
         ),
 
         // ── Theme toggle ──────────────────────────────────────────────────

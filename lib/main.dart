@@ -18,7 +18,14 @@ void main() async {
 
   // Load Dotenv & Initialize Supabase (Cloud Backup & Sync)
   try {
-    await dotenv.load();
+    try {
+      await dotenv.load(fileName: "assets/.env");
+    } catch (_) {
+      try {
+        await dotenv.load(fileName: ".env");
+      } catch (_) {}
+    }
+
     final url = dotenv.env['SUPABASE_URL'] ?? '';
     final key = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
     if (url.isNotEmpty && key.isNotEmpty) {
