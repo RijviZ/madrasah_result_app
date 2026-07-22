@@ -603,9 +603,11 @@ class _DesktopGridState extends State<_DesktopGrid> {
 
     if (subjectChanged || studentListChanged) {
       _buildGrid();
-      if (mounted) {
+      try {
         _stateManager.removeAllRows();
         _stateManager.appendRows(_rows);
+      } catch (_) {
+        // _stateManager not initialized yet by PlutoGrid onLoaded callback
       }
     }
   }
