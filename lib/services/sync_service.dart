@@ -69,7 +69,15 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
     final allMarks = Hive.box<MarkModel>('marks').values.toList();
 
     try {
-      final client = Supabase.instance.client;
+      // Check if Supabase client is initialized
+      SupabaseClient client;
+      try {
+        client = Supabase.instance.client;
+      } catch (_) {
+        throw Exception(lang == 'bn'
+            ? 'সুপাবেস কনফিগারেশন পাওয়া যায়নি। .env ফাইলে SUPABASE_URL এবং SUPABASE_ANON_KEY সেট করুন।'
+            : 'Supabase is not initialized. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file.');
+      }
 
       // 1. Chunked upserts into individual entity tables to avoid single-cell DB lockup
       if (allStudents.isNotEmpty) {
@@ -163,7 +171,15 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
     final lang = ref.read(localeProvider).languageCode;
 
     try {
-      final client = Supabase.instance.client;
+      // Check if Supabase client is initialized
+      SupabaseClient client;
+      try {
+        client = Supabase.instance.client;
+      } catch (_) {
+        throw Exception(lang == 'bn'
+            ? 'সুপাবেস কনফিগারেশন পাওয়া যায়নি। .env ফাইলে SUPABASE_URL এবং SUPABASE_ANON_KEY সেট করুন।'
+            : 'Supabase is not initialized. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env file.');
+      }
 
       List<StudentModel> restoredStudents = [];
       List<SubjectModel> restoredSubjects = [];
