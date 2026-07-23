@@ -3,6 +3,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/mark_model.dart';
 
 class MarkRepository extends StateNotifier<List<MarkModel>> {
@@ -35,6 +36,8 @@ class MarkRepository extends StateNotifier<List<MarkModel>> {
       existingMap[key] = m;
     }
 
+    final List<MarkModel> savedMarks = [];
+
     for (final incoming in marks) {
       final key = '${incoming.studentId}_${incoming.subjectId}_${incoming.examType}';
       final existing = existingMap[key];
@@ -53,11 +56,25 @@ class MarkRepository extends StateNotifier<List<MarkModel>> {
         );
       }
       await _box.put(toSave.id, toSave);
+      savedMarks.add(toSave);
     }
     _refreshState();
+
+    // Real-time Supabase sync
+    try {
+      final client = Supabase.instance.client;
+      final markJsonList = savedMarks.map((m) => m.toJson()).toList();
+      for (var i = 0; i < markJsonList.length; i += 250) {
+        final end = (i + 250 < markJsonList.length) ? i + 250 : markJsonList.length;
+        await client.from('marks').upsert(markJsonList.sublist(i, end));
+      }
+      for (final m in savedMarks) {
+        await markAsSynced(m.id);
+      }
+    } catch (_) {}
   }
 
-  /// Immediately saves/updates a single [MarkModel] in Hive offline storage.
+  /// Immediately saves/updates a single [MarkModel] in Hive offline storage and syncs to Supabase.
   Future<void> upsertSingleMark(MarkModel incoming) async {
     MarkModel? existing;
     try {
@@ -83,6 +100,12 @@ class MarkRepository extends StateNotifier<List<MarkModel>> {
 
     await _box.put(toSave.id, toSave);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('marks').upsert(toSave.toJson());
+      await markAsSynced(toSave.id);
+    } catch (_) {}
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
@@ -129,6 +152,11 @@ class MarkRepository extends StateNotifier<List<MarkModel>> {
   Future<void> deleteMark(String id) async {
     await _box.delete(id);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('marks').delete().eq('id', id);
+    } catch (_) {}
   }
 
   /// Deletes ALL marks for a given [studentId].
@@ -141,6 +169,11 @@ class MarkRepository extends StateNotifier<List<MarkModel>> {
       await _box.delete(id);
     }
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('marks').delete().eq('student_id', studentId);
+    } catch (_) {}
   }
 
   // ── Sync helpers ───────────────────────────────────────────────────────────

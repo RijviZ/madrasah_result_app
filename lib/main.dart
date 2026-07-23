@@ -19,17 +19,13 @@ void main() async {
   // Load Dotenv & Initialize Supabase (Cloud Backup & Sync)
   try {
     try {
-      await dotenv.load(fileName: "assets/.env");
-    } catch (_) {
-      try {
-        await dotenv.load(fileName: ".env");
-      } catch (_) {}
-    }
+      await dotenv.load();
+    } catch (_) {}
 
     String url = dotenv.env['SUPABASE_URL'] ?? '';
     String key = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
-    // Hardcoded production fallback for web deployment
+    // Production fallback for web release deployment
     if (url.isEmpty || key.isEmpty) {
       url = 'https://tmaxzqsqgdhdxgyeftco.supabase.co';
       key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtYXh6cXNxZ2RoZHhneWVmdGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTU1MzksImV4cCI6MjEwMDI3MTUzOX0.p9-snoyHqeTMFgDZ1k4XRcdLKj7a_iTfBJpIwYE2JEM';
@@ -66,8 +62,8 @@ void main() async {
   await Hive.openBox<MarkModel>('marks');
   await Hive.openBox<AppSettingsModel>('settings');
 
-  // Seed initial data if empty
-  await InitialDataSeeder.seedInitialData();
+  // Pull latest backup data from Supabase first, or seed defaults if empty
+  await InitialDataSeeder.restoreFromSupabaseOrSeed();
 
   runApp(
     const ProviderScope(

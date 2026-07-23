@@ -198,21 +198,20 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
               ),
               const SizedBox(height: 10),
 
-              // Toggle Sign In / Sign Up
-              // TextButton(
-              //   onPressed: () =>
-              //       setState(() => _isSignUpMode = !_isSignUpMode),
-              //   child: Text(
-              //     _isSignUpMode
-              //         ? (lang == 'bn'
-              //             ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? প্রবেশ করুন'
-              //             : 'Already have an account? Sign In')
-              //         : (lang == 'bn'
-              //             ? 'নতুন শিক্ষক? নতুন অ্যাকাউন্ট তৈরি করুন'
-              //             : 'New teacher? Create an account'),
-              //     style: TextStyle(fontSize: 13, color: cs.primary),
-              //   ),
-              // ),
+              TextButton(
+                onPressed: () =>
+                    setState(() => _isSignUpMode = !_isSignUpMode),
+                child: Text(
+                  _isSignUpMode
+                      ? (lang == 'bn'
+                          ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? প্রবেশ করুন'
+                          : 'Already have an account? Sign In')
+                      : (lang == 'bn'
+                          ? 'নতুন শিক্ষক? নতুন অ্যাকাউন্ট তৈরি করুন'
+                          : 'New teacher? Create an account'),
+                  style: TextStyle(fontSize: 13, color: cs.primary),
+                ),
+              ),
             ],
           ),
         ),

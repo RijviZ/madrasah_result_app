@@ -3,6 +3,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/student_model.dart';
 
 // ---------------------------------------------------------------------------
@@ -29,6 +30,12 @@ class StudentRepository extends StateNotifier<List<StudentModel>> {
     );
     await _box.put(toSave.id, toSave);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('students').upsert(toSave.toJson());
+      await markAsSynced(toSave.id);
+    } catch (_) {}
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
@@ -80,6 +87,12 @@ class StudentRepository extends StateNotifier<List<StudentModel>> {
     );
     await _box.put(toSave.id, toSave);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('students').upsert(toSave.toJson());
+      await markAsSynced(toSave.id);
+    } catch (_) {}
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
@@ -87,6 +100,11 @@ class StudentRepository extends StateNotifier<List<StudentModel>> {
   Future<void> deleteStudent(String id) async {
     await _box.delete(id);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('students').delete().eq('id', id);
+    } catch (_) {}
   }
 
   // ── Sync helpers ───────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/subject_model.dart';
 
 class SubjectRepository extends StateNotifier<List<SubjectModel>> {
@@ -20,6 +21,12 @@ class SubjectRepository extends StateNotifier<List<SubjectModel>> {
     final toSave = subject.copyWith(isSynced: false);
     await _box.put(toSave.id, toSave);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('subjects').upsert(toSave.toJson());
+      await markAsSynced(toSave.id);
+    } catch (_) {}
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
@@ -41,6 +48,12 @@ class SubjectRepository extends StateNotifier<List<SubjectModel>> {
     final toSave = updated.copyWith(isSynced: false);
     await _box.put(toSave.id, toSave);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('subjects').upsert(toSave.toJson());
+      await markAsSynced(toSave.id);
+    } catch (_) {}
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
@@ -48,6 +61,11 @@ class SubjectRepository extends StateNotifier<List<SubjectModel>> {
   Future<void> deleteSubject(String id) async {
     await _box.delete(id);
     _refreshState();
+
+    try {
+      final client = Supabase.instance.client;
+      await client.from('subjects').delete().eq('id', id);
+    } catch (_) {}
   }
 
   // ── Sync helpers ───────────────────────────────────────────────────────────

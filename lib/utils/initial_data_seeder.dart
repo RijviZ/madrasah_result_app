@@ -2,12 +2,110 @@
 // Seeds Students and Subjects for Haji Altaf Hossen Horindia Alim Madrasah across Class 6, 7, 8, 9, and 10.
 
 import 'package:hive/hive.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/mark_model.dart';
 import '../models/student_model.dart';
 import '../models/subject_model.dart';
 import 'madrasah_subjects.dart';
 
 class InitialDataSeeder {
   InitialDataSeeder._();
+
+  /// Attempts to restore data from Supabase first.
+  /// If Supabase contains data or local Hive has data, populates Hive boxes.
+  /// If Hive is still empty after checking Supabase, seeds initial default data.
+  static Future<void> restoreFromSupabaseOrSeed() async {
+    final studentBox = Hive.box<StudentModel>('students');
+    final subjectBox = Hive.box<SubjectModel>('subjects');
+    final markBox = Hive.box<MarkModel>('marks');
+
+    bool restoredFromSupabase = false;
+
+    try {
+      final client = Supabase.instance.client;
+
+      // 1. Try fetching from relational entity tables first
+      final stData = await client.from('students').select();
+      final subData = await client.from('subjects').select();
+      final mData = await client.from('marks').select();
+
+      final List<dynamic> stList = stData as List<dynamic>? ?? [];
+      final List<dynamic> subList = subData as List<dynamic>? ?? [];
+      final List<dynamic> mList = mData as List<dynamic>? ?? [];
+
+      if (stList.isNotEmpty || subList.isNotEmpty || mList.isNotEmpty) {
+        if (stList.isNotEmpty) {
+          await studentBox.clear();
+          for (final e in stList) {
+            final st = StudentModel.fromJson(Map<String, dynamic>.from(e as Map));
+            await studentBox.put(st.id, st);
+          }
+        }
+        if (subList.isNotEmpty) {
+          await subjectBox.clear();
+          for (final e in subList) {
+            final sub = SubjectModel.fromJson(Map<String, dynamic>.from(e as Map));
+            await subjectBox.put(sub.id, sub);
+          }
+        }
+        if (mList.isNotEmpty) {
+          await markBox.clear();
+          for (final e in mList) {
+            final m = MarkModel.fromJson(Map<String, dynamic>.from(e as Map));
+            await markBox.put(m.id, m);
+          }
+        }
+        restoredFromSupabase = true;
+      }
+
+      // 2. Fallback to legacy single-cell app_backups table if relational tables were empty
+      if (!restoredFromSupabase) {
+        final response = await client
+            .from('app_backups')
+            .select()
+            .eq('id', 'madrasah_full_backup')
+            .maybeSingle();
+
+        if (response != null) {
+          final Map<String, dynamic> data = Map<String, dynamic>.from(response);
+          final List<dynamic> rawStudents = data['students'] as List<dynamic>? ?? [];
+          final List<dynamic> rawSubjects = data['subjects'] as List<dynamic>? ?? [];
+          final List<dynamic> rawMarks = data['marks'] as List<dynamic>? ?? [];
+
+          if (rawStudents.isNotEmpty || rawSubjects.isNotEmpty || rawMarks.isNotEmpty) {
+            if (rawStudents.isNotEmpty) {
+              await studentBox.clear();
+              for (final e in rawStudents) {
+                final st = StudentModel.fromJson(Map<String, dynamic>.from(e as Map));
+                await studentBox.put(st.id, st);
+              }
+            }
+            if (rawSubjects.isNotEmpty) {
+              await subjectBox.clear();
+              for (final e in rawSubjects) {
+                final sub = SubjectModel.fromJson(Map<String, dynamic>.from(e as Map));
+                await subjectBox.put(sub.id, sub);
+              }
+            }
+            if (rawMarks.isNotEmpty) {
+              await markBox.clear();
+              for (final e in rawMarks) {
+                final m = MarkModel.fromJson(Map<String, dynamic>.from(e as Map));
+                await markBox.put(m.id, m);
+              }
+            }
+            restoredFromSupabase = true;
+          }
+        }
+      }
+    } catch (_) {
+      // Supabase uninitialized, offline, or table query failed
+      restoredFromSupabase = false;
+    }
+
+    // 3. Fallback to local default seeding if Hive is still empty
+    await seedInitialData();
+  }
 
   static Future<void> seedInitialData() async {
     final studentBox = Hive.box<StudentModel>('students');

@@ -298,15 +298,18 @@ class _StatCardsRow extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 700 ? 4 : 2;
+        final isDesktop = constraints.maxWidth > 700;
+        final crossAxisCount = isDesktop ? 4 : 2;
+        final childAspectRatio = isDesktop ? 1.55 : 1.35;
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.55,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: childAspectRatio,
           ),
           itemCount: stats.length,
           itemBuilder: (_, i) => StaggeredItem(
@@ -380,14 +383,14 @@ class _StatCardState extends State<_StatCard>
       child: ScaleTransition(
         scale: _scaleAnim,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: d.gradientColors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: d.gradientColors.first.withValues(alpha: 0.35),
@@ -404,32 +407,37 @@ class _StatCardState extends State<_StatCard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(9),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child:
-                        Icon(d.icon, color: Colors.white, size: 20),
+                        Icon(d.icon, color: Colors.white, size: 18),
                   ),
                   if (d.subtitleKey != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        d.subtitleKey!.tr(lang),
-                        style: tt.labelSmall
-                            ?.copyWith(color: Colors.white, fontSize: 10),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          d.subtitleKey!.tr(lang),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.labelSmall
+                              ?.copyWith(color: Colors.white, fontSize: 9),
+                        ),
                       ),
                     ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   d.value != null
                       ? AnimatedStatCounter(
@@ -437,21 +445,28 @@ class _StatCardState extends State<_StatCard>
                           style: tt.headlineSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
+                            fontSize: 18,
                           ),
                         )
                       : Text(
                           'notAvailable'.tr(lang),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: tt.headlineSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
+                            fontSize: 13,
                           ),
                         ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 1),
                   Text(
                     d.titleKey.tr(lang),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
+                      fontSize: 10,
                     ),
                   ),
                 ],
