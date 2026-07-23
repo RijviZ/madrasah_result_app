@@ -57,7 +57,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      final err = e.toString();
+      final isNetwork = err.contains('SocketException') ||
+          err.contains('Failed host lookup') ||
+          err.contains('ClientException') ||
+          err.contains('HandshakeException') ||
+          err.contains('errno = 7');
+      final msg = isNetwork
+          ? 'ইন্টারনেট সংযোগ নেই অথবা সার্ভার সংযোগ বিচ্ছিন্ন। (No internet connection)'
+          : err;
+      state = state.copyWith(isLoading: false, errorMessage: msg);
       return false;
     }
   }
@@ -75,7 +84,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      final err = e.toString();
+      final isNetwork = err.contains('SocketException') ||
+          err.contains('Failed host lookup') ||
+          err.contains('ClientException') ||
+          err.contains('HandshakeException') ||
+          err.contains('errno = 7');
+      final msg = isNetwork
+          ? 'ইন্টারনেট সংযোগ নেই অথবা সার্ভার সংযোগ বিচ্ছিন্ন। (No internet connection)'
+          : err;
+      state = state.copyWith(isLoading: false, errorMessage: msg);
       return false;
     }
   }

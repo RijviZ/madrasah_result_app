@@ -135,18 +135,28 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
       return result;
     } catch (e) {
       final String rawError = e.toString();
+      final bool isNetworkErr = rawError.contains('SocketException') ||
+          rawError.contains('Failed host lookup') ||
+          rawError.contains('ClientException') ||
+          rawError.contains('HandshakeException') ||
+          rawError.contains('errno = 7');
+
       final bool isTableMissing = rawError.contains('public.students') ||
           rawError.contains('public.subjects') ||
           rawError.contains('public.marks') ||
           rawError.contains('42P01');
 
-      final errorMsg = isTableMissing
+      final errorMsg = isNetworkErr
           ? (lang == 'bn'
-              ? 'সুপাবেস ডাটাবেসে `students`, `subjects`, `marks` টেবিল তৈরি করা নেই। অনুগ্রহ করে Supabase SQL Editor এ টেবিলগুলো তৈরি করুন।'
-              : 'Tables `students`, `subjects`, `marks` do not exist in Supabase database. Please create them in Supabase SQL Editor.')
-          : (lang == 'bn'
-              ? 'ক্লাউড ব্যাকআপ তৈরি করা যাচ্ছে না: $e'
-              : 'Failed to create cloud backup: $e');
+              ? 'ইন্টারনেট সংযোগ নেই অথবা সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। আপনার তথ্য লোকাল ডাটাবেসে সুরক্ষিত আছে।'
+              : 'No internet connection or server unreachable. Your data is safely saved locally.')
+          : (isTableMissing
+              ? (lang == 'bn'
+                  ? 'সুপাবেস ডাটাবেসে `students`, `subjects`, `marks` টেবিল তৈরি করা নেই। অনুগ্রহ করে Supabase SQL Editor এ টেবিলগুলো তৈরি করুন।'
+                  : 'Tables `students`, `subjects`, `marks` do not exist in Supabase database. Please create them in Supabase SQL Editor.')
+              : (lang == 'bn'
+                  ? 'ক্লাউড ব্যাকআপ তৈরি করা যাচ্ছে না: $e'
+                  : 'Failed to create cloud backup: $e'));
 
       final result = SyncResult(
         success: false,
@@ -275,9 +285,20 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
       if (context.mounted) _showSnackBar(context, msg, isSuccess: true);
       return result;
     } catch (e) {
-      final errorMsg = lang == 'bn'
-          ? 'ব্যাকআপ পুনরুদ্ধার ব্যর্থ হয়েছে: $e'
-          : 'Failed to restore cloud backup: $e';
+      final String rawError = e.toString();
+      final bool isNetworkErr = rawError.contains('SocketException') ||
+          rawError.contains('Failed host lookup') ||
+          rawError.contains('ClientException') ||
+          rawError.contains('HandshakeException') ||
+          rawError.contains('errno = 7');
+
+      final errorMsg = isNetworkErr
+          ? (lang == 'bn'
+              ? 'ইন্টারনেট সংযোগ নেই অথবা সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না।'
+              : 'No internet connection or server unreachable.')
+          : (lang == 'bn'
+              ? 'ব্যাকআপ পুনরুদ্ধার ব্যর্থ হয়েছে: $e'
+              : 'Failed to restore cloud backup: $e');
       final result = SyncResult(
         success: false,
         syncedStudentsCount: 0,

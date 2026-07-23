@@ -40,9 +40,11 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(lang == 'bn'
-              ? 'ইমেইল এবং পাসওয়ার্ড প্রদান করুন'
-              : 'Please enter email and password'),
+          content: Text(
+            lang == 'bn'
+                ? 'ইমেইল এবং পাসওয়ার্ড প্রদান করুন'
+                : 'Please enter email and password',
+          ),
           backgroundColor: Colors.amber.shade900,
         ),
       );
@@ -59,13 +61,15 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(lang == 'bn'
-                ? (_isSignUpMode
-                    ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে!'
-                    : 'লগইন সফল হয়েছে!')
-                : (_isSignUpMode
-                    ? 'Account created successfully!'
-                    : 'Signed in successfully!')),
+            content: Text(
+              lang == 'bn'
+                  ? (_isSignUpMode
+                        ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে!'
+                        : 'লগইন সফল হয়েছে!')
+                  : (_isSignUpMode
+                        ? 'Account created successfully!'
+                        : 'Signed in successfully!'),
+            ),
             backgroundColor: const Color(0xFF059669),
           ),
         );
@@ -73,10 +77,7 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
         final err =
             ref.read(authProvider).errorMessage ?? 'Authentication failed';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err),
-            backgroundColor: Colors.red.shade700,
-          ),
+          SnackBar(content: Text(err), backgroundColor: Colors.red.shade700),
         );
       }
     }
@@ -106,8 +107,11 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                       color: cs.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.admin_panel_settings_rounded,
-                        color: cs.primary, size: 26),
+                    child: Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: cs.primary,
+                      size: 26,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -117,21 +121,24 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                         Text(
                           _isSignUpMode
                               ? (lang == 'bn'
-                                  ? 'শিক্ষক অ্যাকাউন্ট তৈরি'
-                                  : 'Create Teacher Account')
+                                    ? 'শিক্ষক অ্যাকাউন্ট তৈরি'
+                                    : 'Create Teacher Account')
                               : (lang == 'bn'
-                                  ? 'শিক্ষক বা এডমিন লগইন'
-                                  : 'Teacher / Admin Login'),
+                                    ? 'শিক্ষক বা এডমিন লগইন'
+                                    : 'Teacher / Admin Login'),
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         Text(
                           lang == 'bn'
                               ? 'ডাটা এডিট বা পরিবর্তন করতে লগইন করুন'
                               : 'Authenticate to modify or save data',
                           style: TextStyle(
-                              fontSize: 12,
-                              color: cs.onSurface.withValues(alpha: 0.6)),
+                            fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                          ),
                         ),
                       ],
                     ),
@@ -148,7 +155,8 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                   labelText: lang == 'bn' ? 'ইমেইল অ্যাড্রেস' : 'Email Address',
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -161,14 +169,17 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                   labelText: lang == 'bn' ? 'পাসওয়ার্ড' : 'Password',
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePass
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
+                    icon: Icon(
+                      _obscurePass
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                     onPressed: () =>
                         setState(() => _obscurePass = !_obscurePass),
                   ),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -179,21 +190,26 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: authState.isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Text(
                         _isSignUpMode
                             ? (lang == 'bn' ? 'রেজিস্ট্রেশন করুন' : 'Sign Up')
                             : (lang == 'bn' ? 'প্রবেশ করুন' : 'Sign In'),
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
               ),
               const SizedBox(height: 10),
