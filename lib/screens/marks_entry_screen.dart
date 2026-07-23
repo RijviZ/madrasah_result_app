@@ -374,6 +374,70 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isMobile = MediaQuery.of(context).size.width <= 650;
+
+    if (isMobile) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLow.withValues(alpha: 0.6),
+          border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4))),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ClassDropdownField(
+                    selectedClass: selectedClass,
+                    onChanged: onClassChanged,
+                    lang: lang,
+                    customClasses: classes,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _FilterDropdown(
+                    label: 'section'.tr(lang),
+                    value: selectedSection,
+                    items: sections,
+                    onChanged: onSectionChanged,
+                    icon: Icons.group_rounded,
+                    enabled: selectedClass != null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _FilterDropdown(
+                    label: 'examType'.tr(lang),
+                    value: selectedExamType,
+                    items: _examTypes,
+                    onChanged: onExamTypeChanged,
+                    icon: Icons.event_note_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _FilterDropdown(
+                    label: 'subjectName'.tr(lang),
+                    value: selectedSubjectId,
+                    items: subjects.map((s) => s.id).toList(),
+                    displayItems: subjects.map((s) => s.subjectName).toList(),
+                    onChanged: onSubjectChanged,
+                    icon: Icons.menu_book_rounded,
+                    enabled: selectedClass != null && subjects.isNotEmpty,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -401,6 +465,7 @@ class _FilterBar extends StatelessWidget {
             onChanged: onSectionChanged,
             icon: Icons.group_rounded,
             enabled: selectedClass != null,
+            width: 180,
           ),
           _FilterDropdown(
             label: 'examType'.tr(lang),
@@ -408,6 +473,7 @@ class _FilterBar extends StatelessWidget {
             items: _examTypes,
             onChanged: onExamTypeChanged,
             icon: Icons.event_note_rounded,
+            width: 180,
           ),
           _FilterDropdown(
             label: 'subjectName'.tr(lang),
@@ -417,6 +483,7 @@ class _FilterBar extends StatelessWidget {
             onChanged: onSubjectChanged,
             icon: Icons.menu_book_rounded,
             enabled: selectedClass != null && subjects.isNotEmpty,
+            width: 180,
           ),
         ],
       ),
@@ -433,6 +500,7 @@ class _FilterDropdown extends StatelessWidget {
     required this.icon,
     this.displayItems,
     this.enabled = true,
+    this.width,
   });
 
   final String label;
@@ -442,47 +510,51 @@ class _FilterDropdown extends StatelessWidget {
   final ValueChanged<String?> onChanged;
   final IconData icon;
   final bool enabled;
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final safeValue = (value != null && items.contains(value)) ? value : null;
 
-    return SizedBox(
-      width: 180,
-      child: DropdownButtonFormField<String>(
-        key: ValueKey(safeValue),
-        initialValue: safeValue,
-        onChanged: enabled ? onChanged : null,
-        isExpanded: true,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          isDense: true,
-          filled: true,
-          fillColor: enabled
-              ? cs.surfaceContainerLow
-              : cs.surfaceContainerLow.withValues(alpha: 0.5),
+    final dropdown = DropdownButtonFormField<String>(
+      key: ValueKey(safeValue),
+      initialValue: safeValue,
+      onChanged: enabled ? onChanged : null,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
-        hint: Text(label,
-            style: TextStyle(
-                color: cs.onSurface.withValues(alpha: 0.45), fontSize: 13)),
-        items: List.generate(items.length, (i) {
-          return DropdownMenuItem(
-            value: items[i],
-            child: Text(
-              displayItems != null ? displayItems![i] : items[i],
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        }),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        isDense: true,
+        filled: true,
+        fillColor: enabled
+            ? cs.surfaceContainerLow
+            : cs.surfaceContainerLow.withValues(alpha: 0.5),
       ),
+      hint: Text(label,
+          style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.45), fontSize: 13)),
+      items: List.generate(items.length, (i) {
+        return DropdownMenuItem(
+          value: items[i],
+          child: Text(
+            displayItems != null ? displayItems![i] : items[i],
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13),
+          ),
+        );
+      }),
     );
+
+    if (width != null) {
+      return SizedBox(width: width, child: dropdown);
+    }
+    return dropdown;
   }
 }
 
@@ -811,7 +883,7 @@ class _DesktopGridState extends State<_DesktopGrid> {
 // Mobile ListView
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MobileListView extends StatelessWidget {
+class _MobileListView extends StatefulWidget {
   const _MobileListView({
     required this.students,
     required this.subject,
@@ -827,20 +899,65 @@ class _MobileListView extends StatelessWidget {
   final void Function(String studentId, double val) onMarksChanged;
 
   @override
+  State<_MobileListView> createState() => _MobileListViewState();
+}
+
+class _MobileListViewState extends State<_MobileListView> {
+  final List<FocusNode> _focusNodes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateFocusNodes();
+  }
+
+  @override
+  void didUpdateWidget(_MobileListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.students.length != widget.students.length) {
+      _updateFocusNodes();
+    }
+  }
+
+  void _updateFocusNodes() {
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    _focusNodes.clear();
+    for (int i = 0; i < widget.students.length; i++) {
+      _focusNodes.add(FocusNode());
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: students.length,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 80),
+      itemCount: widget.students.length,
       itemBuilder: (context, i) {
-        final st = students[i];
-        final obtained = marksDraft[st.id] ?? 0.0;
+        final st = widget.students[i];
+        final obtained = widget.marksDraft[st.id] ?? 0.0;
+        final isLast = i == widget.students.length - 1;
+        final nextFocus = isLast ? null : (_focusNodes.length > i + 1 ? _focusNodes[i + 1] : null);
+
         return _MobileMarkCard(
-          key: ValueKey('${st.id}_${subject.id}'),
+          key: ValueKey('${st.id}_${widget.subject.id}'),
           student: st,
-          subject: subject,
+          subject: widget.subject,
           obtained: obtained,
-          lang: lang,
-          onChanged: (val) => onMarksChanged(st.id, val),
+          lang: widget.lang,
+          focusNode: _focusNodes.length > i ? _focusNodes[i] : null,
+          nextFocusNode: nextFocus,
+          isLastItem: isLast,
+          onChanged: (val) => widget.onMarksChanged(st.id, val),
         );
       },
     );
@@ -855,6 +972,9 @@ class _MobileMarkCard extends StatefulWidget {
     required this.obtained,
     required this.lang,
     required this.onChanged,
+    this.focusNode,
+    this.nextFocusNode,
+    this.isLastItem = false,
   });
 
   final StudentModel student;
@@ -862,6 +982,9 @@ class _MobileMarkCard extends StatefulWidget {
   final double obtained;
   final String lang;
   final ValueChanged<double> onChanged;
+  final FocusNode? focusNode;
+  final FocusNode? nextFocusNode;
+  final bool isLastItem;
 
   @override
   State<_MobileMarkCard> createState() => _MobileMarkCardState();
@@ -869,28 +992,57 @@ class _MobileMarkCard extends StatefulWidget {
 
 class _MobileMarkCardState extends State<_MobileMarkCard> {
   late TextEditingController _controller;
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(
-      text: widget.obtained == 0.0 ? '' : widget.obtained.toString(),
+      text: widget.obtained == 0.0
+          ? ''
+          : (widget.obtained % 1 == 0
+              ? widget.obtained.toInt().toString()
+              : widget.obtained.toString()),
     );
+    widget.focusNode?.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = widget.focusNode?.hasFocus ?? false;
+      });
+    }
   }
 
   @override
   void didUpdateWidget(_MobileMarkCard old) {
     super.didUpdateWidget(old);
-    if (old.obtained != widget.obtained) {
-      _controller.text =
-          widget.obtained == 0.0 ? '' : widget.obtained.toString();
+    if (old.obtained != widget.obtained && !_isFocused) {
+      _controller.text = widget.obtained == 0.0
+          ? ''
+          : (widget.obtained % 1 == 0
+              ? widget.obtained.toInt().toString()
+              : widget.obtained.toString());
+    }
+    if (old.focusNode != widget.focusNode) {
+      old.focusNode?.removeListener(_onFocusChange);
+      widget.focusNode?.addListener(_onFocusChange);
     }
   }
 
   @override
   void dispose() {
+    widget.focusNode?.removeListener(_onFocusChange);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _applyQuickScore(double val) {
+    final clamped = val.clamp(0.0, widget.subject.fullMarks);
+    _controller.text = clamped % 1 == 0 ? clamped.toInt().toString() : clamped.toString();
+    widget.onChanged(clamped);
+    setState(() {});
   }
 
   @override
@@ -900,110 +1052,222 @@ class _MobileMarkCardState extends State<_MobileMarkCard> {
     final obtained = double.tryParse(_controller.text) ?? 0.0;
     final isPassed = obtained >= widget.subject.passMarks;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _isFocused
+            ? cs.primaryContainer.withValues(alpha: 0.15)
+            : cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isFocused
+              ? cs.primary
+              : cs.outlineVariant.withValues(alpha: 0.5),
+          width: _isFocused ? 2.0 : 1.0,
+        ),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : [],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Roll circle
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  GradingEngine.formatInt(widget.student.roll, widget.lang),
-                  style: tt.labelLarge?.copyWith(
-                    color: cs.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
+            // ── Top Row: Roll badge + Student Name + Pass/Fail Chip ────────
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${widget.lang == 'bn' ? 'রোল' : 'Roll'} ${GradingEngine.formatInt(widget.student.roll, widget.lang)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Name
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.student.name,
-                      style: tt.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  Text(
-                    '${widget.subject.subjectName} · ${widget.subject.fullMarks.toInt()}',
-                    style: tt.bodySmall?.copyWith(
-                        color: cs.onSurface.withValues(alpha: 0.55)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.student.name,
+                    style: tt.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isPassed
+                        ? const Color(0xFF16A34A).withValues(alpha: 0.15)
+                        : const Color(0xFFDC2626).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                    ),
+                  ),
+                  child: Text(
+                    isPassed
+                        ? (widget.lang == 'bn' ? 'পাস' : 'PASS')
+                        : (widget.lang == 'bn' ? 'ফেল' : 'FAIL'),
+                    style: TextStyle(
+                      color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            // Marks TextField
-            SizedBox(
-              width: 80,
-              child: TextFormField(
-                controller: _controller,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d*\.?\d{0,2}')),
-                ],
-                decoration: InputDecoration(
-                  hintText: '0',
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 10),
-                  isDense: true,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
+
+            const SizedBox(height: 10),
+            Divider(height: 1, thickness: 0.5, color: cs.outlineVariant.withValues(alpha: 0.4)),
+            const SizedBox(height: 10),
+
+            // ── Bottom Row: Marks Input & Score Presets ──────────────────────
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: SizedBox(
+                    height: 46,
+                    child: TextFormField(
+                      focusNode: widget.focusNode,
+                      controller: _controller,
+                      textInputAction: widget.isLastItem ? TextInputAction.done : TextInputAction.next,
+                      onFieldSubmitted: (_) {
+                        if (widget.nextFocusNode != null) {
+                          widget.nextFocusNode!.requestFocus();
+                        }
+                      },
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: cs.primary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        prefixIcon: const Icon(Icons.edit_note_rounded, size: 20),
+                        suffixText: '/ ${widget.subject.fullMarks.toInt()}',
+                        suffixStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: cs.surfaceContainerLow,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: cs.primary, width: 2),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        final parsed = double.tryParse(val) ?? 0.0;
+                        final clamped = parsed.clamp(0.0, widget.subject.fullMarks);
+                        widget.onChanged(clamped);
+                        setState(() {});
+                      },
+                    ),
+                  ),
                 ),
-                onChanged: (val) {
-                  final parsed = double.tryParse(val) ?? 0.0;
-                  final clamped = parsed.clamp(0.0, widget.subject.fullMarks);
-                  widget.onChanged(clamped);
-                  setState(() {});
-                },
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Pass/Fail Chip
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isPassed
-                    ? const Color(0xFF16A34A).withValues(alpha: 0.15)
-                    : const Color(0xFFDC2626).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isPassed
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFFDC2626),
+
+                const SizedBox(width: 8),
+
+                Wrap(
+                  spacing: 4,
+                  children: [
+                    _QuickScoreButton(
+                      label: '${widget.subject.fullMarks.toInt()}',
+                      tooltip: widget.lang == 'bn' ? 'পূর্ণ নম্বর' : 'Full Marks',
+                      color: const Color(0xFF059669),
+                      onTap: () => _applyQuickScore(widget.subject.fullMarks),
+                    ),
+                    _QuickScoreButton(
+                      label: '${widget.subject.passMarks.toInt()}',
+                      tooltip: widget.lang == 'bn' ? 'পাস নম্বর' : 'Pass Marks',
+                      color: const Color(0xFF2563EB),
+                      onTap: () => _applyQuickScore(widget.subject.passMarks),
+                    ),
+                    _QuickScoreButton(
+                      label: '0',
+                      tooltip: widget.lang == 'bn' ? 'শূন্য' : 'Zero',
+                      color: const Color(0xFFDC2626),
+                      onTap: () => _applyQuickScore(0.0),
+                    ),
+                  ],
                 ),
-              ),
-              child: Text(
-                isPassed
-                    ? (widget.lang == 'bn' ? 'পাস' : 'PASS')
-                    : (widget.lang == 'bn' ? 'ফেল' : 'FAIL'),
-                style: TextStyle(
-                  color: isPassed
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFFDC2626),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                ),
-              ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickScoreButton extends StatelessWidget {
+  const _QuickScoreButton({
+    required this.label,
+    required this.tooltip,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final String tooltip;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ),
       ),
     );
