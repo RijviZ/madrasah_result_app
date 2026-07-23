@@ -1,0 +1,29 @@
+{
+  "assets": {},
+  "config": {
+    "build_asset_types": [
+      "code_assets/code"
+    ],
+    "extensions": {
+      "code_assets": {
+        "android": {
+          "target_ndk_api": 24
+        },
+        "c_compiler": {
+          "ar": "/Users/rijvizaman/Library/Android/sdk/ndk/30.0.14904198/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-ar",
+          "cc": "/Users/rijvizaman/Library/Android/sdk/ndk/30.0.14904198/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang",
+          "ld": "/Users/rijvizaman/Library/Android/sdk/ndk/30.0.14904198/toolchains/llvm/prebuilt/darwin-x86_64/bin/ld.lld"
+        },
+        "link_mode_preference": "dynamic",
+        "target_architecture": "arm64",
+        "target_os": "android"
+      }
+    },
+    "linking_enabled": true
+  },
+  "out_dir_shared": "/Users/rijvizaman/.gemini/antigravity-ide/scratch/madrasah_result_app/.dart_tool/hooks_runner/shared/objective_c/build/",
+  "out_file": "/Users/rijvizaman/.gemini/antigravity-ide/scratch/madrasah_result_app/.dart_tool/hooks_runner/objective_c/f81417f325/output.json",
+  "package_name": "objective_c",
+  "package_root": "/Users/rijvizaman/.pub-cache/hosted/pub.dev/objective_c-9.4.1/",
+  "user_defines": {}
+}
