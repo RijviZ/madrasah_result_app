@@ -26,14 +26,21 @@ void main() async {
       } catch (_) {}
     }
 
-    final url = dotenv.env['SUPABASE_URL'] ?? '';
-    final key = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    String url = dotenv.env['SUPABASE_URL'] ?? '';
+    String key = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+    // Hardcoded production fallback for web deployment
+    if (url.isEmpty || key.isEmpty) {
+      url = 'https://tmaxzqsqgdhdxgyeftco.supabase.co';
+      key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtYXh6cXNxZ2RoZHhneWVmdGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTU1MzksImV4cCI6MjEwMDI3MTUzOX0.p9-snoyHqeTMFgDZ1k4XRcdLKj7a_iTfBJpIwYE2JEM';
+    }
+
     if (url.isNotEmpty && key.isNotEmpty) {
       // ignore: deprecated_member_use
       await Supabase.initialize(url: url, anonKey: key);
     }
   } catch (e) {
-    debugPrint('Dotenv load notice: $e');
+    debugPrint('Supabase init notice: $e');
   }
 
   // Initialize Hive
