@@ -531,7 +531,7 @@ class _QuickActionsSection extends ConsumerWidget {
             ? () {}
             : () => ref
                 .read(syncServiceProvider.notifier)
-                .syncToSupabase(ref, context),
+                .syncToSupabase(context),
       ),
     ];
 

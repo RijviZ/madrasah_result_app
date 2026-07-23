@@ -48,7 +48,9 @@ class SyncState {
 }
 
 class SyncServiceNotifier extends StateNotifier<SyncState> {
-  SyncServiceNotifier() : super(const SyncState());
+  final Ref _ref;
+
+  SyncServiceNotifier(this._ref) : super(const SyncState());
 
   /// Helper to batch upsert list of maps in chunks to avoid single request payload limit issues
   Future<void> _upsertInChunks(SupabaseClient client, String tableName, List<Map<String, dynamic>> records, {int chunkSize = 250}) async {
@@ -60,9 +62,9 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
   }
 
   /// Backs up all local Hive data (students, subjects, marks) to Supabase Cloud using normalized relational tables.
-  Future<SyncResult> backupToSupabase(WidgetRef ref, BuildContext context) async {
+  Future<SyncResult> backupToSupabase([BuildContext? context]) async {
     state = state.copyWith(isLoading: true);
-    final lang = ref.read(localeProvider).languageCode;
+    final lang = _ref.read(localeProvider).languageCode;
 
     final allStudents = Hive.box<StudentModel>('students').values.toList();
     final allSubjects = Hive.box<SubjectModel>('subjects').values.toList();
@@ -108,13 +110,13 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
 
       // 3. Mark items as synced locally
       for (final s in allStudents) {
-        await ref.read(studentRepositoryProvider.notifier).markAsSynced(s.id);
+        await _ref.read(studentRepositoryProvider.notifier).markAsSynced(s.id);
       }
       for (final sub in allSubjects) {
-        await ref.read(subjectRepositoryProvider.notifier).markAsSynced(sub.id);
+        await _ref.read(subjectRepositoryProvider.notifier).markAsSynced(sub.id);
       }
       for (final m in allMarks) {
-        await ref.read(markRepositoryProvider.notifier).markAsSynced(m.id);
+        await _ref.read(markRepositoryProvider.notifier).markAsSynced(m.id);
       }
 
       final result = SyncResult(
@@ -129,7 +131,7 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
       );
 
       state = SyncState(isLoading: false, result: result);
-      if (context.mounted) {
+      if (context != null && context.mounted) {
         _showSnackBar(context, result.message, isSuccess: true);
       }
       return result;
@@ -167,7 +169,7 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
         timestamp: DateTime.now(),
       );
       state = SyncState(isLoading: false, result: result);
-      if (context.mounted) {
+      if (context != null && context.mounted) {
         _showSnackBar(context, errorMsg, isSuccess: false);
       }
       return result;
@@ -176,9 +178,9 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
 
   /// Restores all data from Supabase Cloud backup into local Hive boxes.
   /// Prefers normalized entity tables (`students`, `subjects`, `marks`) and falls back to legacy `app_backups` single-cell if needed.
-  Future<SyncResult> restoreFromSupabase(WidgetRef ref, BuildContext context) async {
+  Future<SyncResult> restoreFromSupabase([BuildContext? context]) async {
     state = state.copyWith(isLoading: true);
-    final lang = ref.read(localeProvider).languageCode;
+    final lang = _ref.read(localeProvider).languageCode;
 
     try {
       // Check if Supabase client is initialized
@@ -242,7 +244,7 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
             timestamp: DateTime.now(),
           );
           state = SyncState(isLoading: false, result: res);
-          if (context.mounted) _showSnackBar(context, msg, isSuccess: false);
+          if (context != null && context.mounted) _showSnackBar(context, msg, isSuccess: false);
           return res;
         }
 
@@ -264,9 +266,9 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
         }
       }
 
-      await ref.read(studentRepositoryProvider.notifier).restoreAll(restoredStudents);
-      await ref.read(subjectRepositoryProvider.notifier).restoreAll(restoredSubjects);
-      await ref.read(markRepositoryProvider.notifier).restoreAll(restoredMarks);
+      await _ref.read(studentRepositoryProvider.notifier).restoreAll(restoredStudents);
+      await _ref.read(subjectRepositoryProvider.notifier).restoreAll(restoredSubjects);
+      await _ref.read(markRepositoryProvider.notifier).restoreAll(restoredMarks);
 
       final msg = lang == 'bn'
           ? 'ক্লাউড ব্যাকআপ পুনরুদ্ধার সফল হয়েছে! (স্টুডেন্ট: ${restoredStudents.length}, বিষয়: ${restoredSubjects.length}, মার্কস: ${restoredMarks.length})'
@@ -282,7 +284,7 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
       );
 
       state = SyncState(isLoading: false, result: result);
-      if (context.mounted) _showSnackBar(context, msg, isSuccess: true);
+      if (context != null && context.mounted) _showSnackBar(context, msg, isSuccess: true);
       return result;
     } catch (e) {
       final String rawError = e.toString();
@@ -308,14 +310,14 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
         timestamp: DateTime.now(),
       );
       state = SyncState(isLoading: false, result: result);
-      if (context.mounted) _showSnackBar(context, errorMsg, isSuccess: false);
+      if (context != null && context.mounted) _showSnackBar(context, errorMsg, isSuccess: false);
       return result;
     }
   }
 
   /// Performs batch sync of all pending (isSynced == false) Hive records.
-  Future<SyncResult> syncToSupabase(WidgetRef ref, BuildContext context) async {
-    return backupToSupabase(ref, context);
+  Future<SyncResult> syncToSupabase([BuildContext? context]) async {
+    return backupToSupabase(context);
   }
 
   void _showSnackBar(BuildContext context, String message, {required bool isSuccess}) {
@@ -347,10 +349,10 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
   }
 
   /// Exports local database contents to a formatted JSON string backup.
-  String exportBackupJson(WidgetRef ref) {
-    final students = ref.read(studentRepositoryProvider);
-    final subjects = ref.read(subjectRepositoryProvider);
-    final marks = ref.read(markRepositoryProvider);
+  String exportBackupJson() {
+    final students = _ref.read(studentRepositoryProvider);
+    final subjects = _ref.read(subjectRepositoryProvider);
+    final marks = _ref.read(markRepositoryProvider);
 
     final data = {
       'app': 'Madrasah Result App',
@@ -366,5 +368,5 @@ class SyncServiceNotifier extends StateNotifier<SyncState> {
 }
 
 final syncServiceProvider = StateNotifierProvider<SyncServiceNotifier, SyncState>((ref) {
-  return SyncServiceNotifier();
+  return SyncServiceNotifier(ref);
 });

@@ -336,7 +336,7 @@ class SettingsScreen extends ConsumerWidget {
                                     : () {
                                         ref
                                             .read(syncServiceProvider.notifier)
-                                            .backupToSupabase(ref, context);
+                                            .backupToSupabase(context);
                                       },
                                 icon: syncState.isLoading
                                     ? const SizedBox(
@@ -442,7 +442,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void _showBackupDialog(BuildContext context, WidgetRef ref, String lang) {
     final jsonStr =
-        ref.read(syncServiceProvider.notifier).exportBackupJson(ref);
+        ref.read(syncServiceProvider.notifier).exportBackupJson();
     final cs = Theme.of(context).colorScheme;
 
     showDialog(
@@ -522,7 +522,7 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(ctx);
               ref
                   .read(syncServiceProvider.notifier)
-                  .restoreFromSupabase(ref, context);
+                  .restoreFromSupabase(context);
             },
             icon: const Icon(Icons.cloud_download_rounded, size: 18),
             label:

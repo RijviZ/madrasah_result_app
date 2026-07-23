@@ -59,8 +59,8 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
 
     if (mounted) {
       if (success) {
-        // Automatically restore data from Supabase Cloud on login
-        ref.read(syncServiceProvider.notifier).restoreFromSupabase(ref, context);
+        // Trigger background data restore from Supabase on login without dialog context
+        ref.read(syncServiceProvider.notifier).restoreFromSupabase();
 
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -68,11 +68,11 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
             content: Text(
               lang == 'bn'
                   ? (_isSignUpMode
-                        ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে এবং ক্লাউড ডাটা রিস্টোর হচ্ছে...'
-                        : 'লগইন সফল হয়েছে এবং ক্লাউড ডাটা রিস্টোর হচ্ছে...')
+                        ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে!'
+                        : 'লগইন সফল হয়েছে!')
                   : (_isSignUpMode
-                        ? 'Account created! Restoring cloud data...'
-                        : 'Signed in! Restoring cloud data...'),
+                        ? 'Account created successfully!'
+                        : 'Signed in successfully!'),
             ),
             backgroundColor: const Color(0xFF059669),
           ),
@@ -125,11 +125,11 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
                         Text(
                           _isSignUpMode
                               ? (lang == 'bn'
-                                    ? 'শিক্ষক অ্যাকাউন্ট তৈরি'
-                                    : 'Create Teacher Account')
+                                  ? 'শিক্ষক অ্যাকাউন্ট তৈরি'
+                                  : 'Create Teacher Account')
                               : (lang == 'bn'
-                                    ? 'শিক্ষক বা এডমিন লগইন'
-                                    : 'Teacher / Admin Login'),
+                                  ? 'শিক্ষক বা এডমিন লগইন'
+                                  : 'Teacher / Admin Login'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -218,20 +218,20 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
               ),
               const SizedBox(height: 10),
 
-              TextButton(
-                onPressed: () =>
-                    setState(() => _isSignUpMode = !_isSignUpMode),
-                child: Text(
-                  _isSignUpMode
-                      ? (lang == 'bn'
-                          ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? প্রবেশ করুন'
-                          : 'Already have an account? Sign In')
-                      : (lang == 'bn'
-                          ? 'নতুন শিক্ষক? নতুন অ্যাকাউন্ট তৈরি করুন'
-                          : 'New teacher? Create an account'),
-                  style: TextStyle(fontSize: 13, color: cs.primary),
-                ),
-              ),
+              // TextButton(
+              //   onPressed: () =>
+              //       setState(() => _isSignUpMode = !_isSignUpMode),
+              //   child: Text(
+              //     _isSignUpMode
+              //         ? (lang == 'bn'
+              //             ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? প্রবেশ করুন'
+              //             : 'Already have an account? Sign In')
+              //         : (lang == 'bn'
+              //             ? 'নতুন শিক্ষক? নতুন অ্যাকাউন্ট তৈরি করুন'
+              //             : 'New teacher? Create an account'),
+              //     style: TextStyle(fontSize: 13, color: cs.primary),
+              //   ),
+              // ),
             ],
           ),
         ),
