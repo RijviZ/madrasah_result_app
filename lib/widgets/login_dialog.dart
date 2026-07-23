@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/locale_provider.dart';
+import '../services/sync_service.dart';
 
 class LoginDialog extends ConsumerStatefulWidget {
   const LoginDialog({super.key});
@@ -58,17 +59,20 @@ class _LoginDialogState extends ConsumerState<LoginDialog> {
 
     if (mounted) {
       if (success) {
+        // Automatically restore data from Supabase Cloud on login
+        ref.read(syncServiceProvider.notifier).restoreFromSupabase(ref, context);
+
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               lang == 'bn'
                   ? (_isSignUpMode
-                        ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে!'
-                        : 'লগইন সফল হয়েছে!')
+                        ? 'অ্যাকাউন্ট তৈরি সফল হয়েছে এবং ক্লাউড ডাটা রিস্টোর হচ্ছে...'
+                        : 'লগইন সফল হয়েছে এবং ক্লাউড ডাটা রিস্টোর হচ্ছে...')
                   : (_isSignUpMode
-                        ? 'Account created successfully!'
-                        : 'Signed in successfully!'),
+                        ? 'Account created! Restoring cloud data...'
+                        : 'Signed in! Restoring cloud data...'),
             ),
             backgroundColor: const Color(0xFF059669),
           ),
