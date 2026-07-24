@@ -1,2 +1,0 @@
-/Users/rijvizaman/.gemini/antigravity-ide/scratch/madrasah_result_app/build/.cxx/release/6t3f2b5j/armeabi-v7a/CMakeFiles/edit_cache.dir
-/Users/rijvizaman/.gemini/antigravity-ide/scratch/madrasah_result_app/build/.cxx/release/6t3f2b5j/armeabi-v7a/CMakeFiles/rebuild_cache.dir
