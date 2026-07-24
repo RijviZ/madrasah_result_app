@@ -223,15 +223,16 @@ class _MarksEntryScreenState extends ConsumerState<MarksEntryScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // ── Gradient Page Header ───────────────────────────────────────
-          GradientPageHeader(
-            icon: Icons.edit_note_rounded,
-            title: lang == 'bn' ? 'নম্বর প্রবেশ' : 'Marks Entry',
-            subtitle: lang == 'bn'
-                ? 'শ্রেণী ও বিষয় নির্বাচন করে নম্বর প্রবেশ করুন'
-                : 'Select class, exam type and subject to enter marks',
-            gradientColors: [const Color(0xFFE65100), const Color(0xFFEF6C00)],
-          ),
+          // ── Gradient Page Header (Desktop Only to Maximize Mobile Screen Space) ──
+          if (isDesktop)
+            GradientPageHeader(
+              icon: Icons.edit_note_rounded,
+              title: lang == 'bn' ? 'নম্বর প্রবেশ' : 'Marks Entry',
+              subtitle: lang == 'bn'
+                  ? 'শ্রেণী ও বিষয় নির্বাচন করে নম্বর প্রবেশ করুন'
+                  : 'Select class, exam type and subject to enter marks',
+              gradientColors: [const Color(0xFFE65100), const Color(0xFFEF6C00)],
+            ),
           // ── Filter Bar ───────────────────────────────────────────
           _FilterBar(
             lang: lang,
@@ -1038,236 +1039,137 @@ class _MobileMarkCardState extends State<_MobileMarkCard> {
     super.dispose();
   }
 
-  void _applyQuickScore(double val) {
-    final clamped = val.clamp(0.0, widget.subject.fullMarks);
-    _controller.text = clamped % 1 == 0 ? clamped.toInt().toString() : clamped.toString();
-    widget.onChanged(clamped);
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final obtained = double.tryParse(_controller.text) ?? 0.0;
     final isPassed = obtained >= widget.subject.passMarks;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: _isFocused
             ? cs.primaryContainer.withValues(alpha: 0.15)
             : cs.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isFocused
               ? cs.primary
-              : cs.outlineVariant.withValues(alpha: 0.5),
-          width: _isFocused ? 2.0 : 1.0,
+              : cs.outlineVariant.withValues(alpha: 0.4),
+          width: _isFocused ? 1.8 : 1.0,
         ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            : [],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
           children: [
-            // ── Top Row: Roll badge + Student Name + Pass/Fail Chip ────────
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: cs.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${widget.lang == 'bn' ? 'রোল' : 'Roll'} ${GradingEngine.formatInt(widget.student.roll, widget.lang)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
+            // Roll badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                GradingEngine.formatInt(widget.student.roll, widget.lang),
+                style: TextStyle(
+                  color: cs.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    widget.student.name,
-                    style: tt.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isPassed
-                        ? const Color(0xFF16A34A).withValues(alpha: 0.15)
-                        : const Color(0xFFDC2626).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                    ),
-                  ),
-                  child: Text(
-                    isPassed
-                        ? (widget.lang == 'bn' ? 'পাস' : 'PASS')
-                        : (widget.lang == 'bn' ? 'ফেল' : 'FAIL'),
-                    style: TextStyle(
-                      color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-
-            const SizedBox(height: 10),
-            Divider(height: 1, thickness: 0.5, color: cs.outlineVariant.withValues(alpha: 0.4)),
-            const SizedBox(height: 10),
-
-            // ── Bottom Row: Marks Input & Score Presets ──────────────────────
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: SizedBox(
-                    height: 46,
-                    child: TextFormField(
-                      focusNode: widget.focusNode,
-                      controller: _controller,
-                      textInputAction: widget.isLastItem ? TextInputAction.done : TextInputAction.next,
-                      onFieldSubmitted: (_) {
-                        if (widget.nextFocusNode != null) {
-                          widget.nextFocusNode!.requestFocus();
-                        }
-                      },
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                      ],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: cs.primary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                        prefixIcon: const Icon(Icons.edit_note_rounded, size: 20),
-                        suffixText: '/ ${widget.subject.fullMarks.toInt()}',
-                        suffixStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface.withValues(alpha: 0.6),
-                        ),
-                        filled: true,
-                        fillColor: cs.surfaceContainerLow,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.primary, width: 2),
-                        ),
-                      ),
-                      onChanged: (val) {
-                        final parsed = double.tryParse(val) ?? 0.0;
-                        final clamped = parsed.clamp(0.0, widget.subject.fullMarks);
-                        widget.onChanged(clamped);
-                        setState(() {});
-                      },
-                    ),
+            const SizedBox(width: 8),
+            // Student Name
+            Expanded(
+              child: Text(
+                widget.student.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Marks Input Box (single line)
+            SizedBox(
+              width: 95,
+              height: 40,
+              child: TextFormField(
+                focusNode: widget.focusNode,
+                controller: _controller,
+                textInputAction: widget.isLastItem ? TextInputAction.done : TextInputAction.next,
+                onFieldSubmitted: (_) {
+                  if (widget.nextFocusNode != null) {
+                    widget.nextFocusNode!.requestFocus();
+                  }
+                },
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                ],
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: cs.primary,
+                ),
+                decoration: InputDecoration(
+                  hintText: '0',
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  suffixText: '/${widget.subject.fullMarks.toInt()}',
+                  suffixStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface.withValues(alpha: 0.55),
+                  ),
+                  filled: true,
+                  fillColor: cs.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: cs.primary, width: 1.8),
                   ),
                 ),
-
-                const SizedBox(width: 8),
-
-                Wrap(
-                  spacing: 4,
-                  children: [
-                    _QuickScoreButton(
-                      label: '${widget.subject.fullMarks.toInt()}',
-                      tooltip: widget.lang == 'bn' ? 'পূর্ণ নম্বর' : 'Full Marks',
-                      color: const Color(0xFF059669),
-                      onTap: () => _applyQuickScore(widget.subject.fullMarks),
-                    ),
-                    _QuickScoreButton(
-                      label: '${widget.subject.passMarks.toInt()}',
-                      tooltip: widget.lang == 'bn' ? 'পাস নম্বর' : 'Pass Marks',
-                      color: const Color(0xFF2563EB),
-                      onTap: () => _applyQuickScore(widget.subject.passMarks),
-                    ),
-                    _QuickScoreButton(
-                      label: '0',
-                      tooltip: widget.lang == 'bn' ? 'শূন্য' : 'Zero',
-                      color: const Color(0xFFDC2626),
-                      onTap: () => _applyQuickScore(0.0),
-                    ),
-                  ],
+                onChanged: (val) {
+                  final parsed = double.tryParse(val) ?? 0.0;
+                  final clamped = parsed.clamp(0.0, widget.subject.fullMarks);
+                  widget.onChanged(clamped);
+                  setState(() {});
+                },
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Pass / Fail status badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isPassed
+                    ? const Color(0xFF16A34A).withValues(alpha: 0.12)
+                    : const Color(0xFFDC2626).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                 ),
-              ],
+              ),
+              child: Text(
+                isPassed
+                    ? (widget.lang == 'bn' ? 'পাস' : 'PASS')
+                    : (widget.lang == 'bn' ? 'ফেল' : 'FAIL'),
+                style: TextStyle(
+                  color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickScoreButton extends StatelessWidget {
-  const _QuickScoreButton({
-    required this.label,
-    required this.tooltip,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String label;
-  final String tooltip;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
         ),
       ),
     );
